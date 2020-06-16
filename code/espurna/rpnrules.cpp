@@ -139,6 +139,23 @@ bool _rpnNtpFunc(rpn_context & ctxt, int (*func)(time_t)) {
 
 #endif
 
+#if RELAY_SUPPORT
+
+bool _rpnRelayStatus(rpn_context & ctxt, bool force) {
+    float status, id;
+    rpn_stack_pop(ctxt, id);
+    rpn_stack_pop(ctxt, status);
+
+    if (int(status) == 2) {
+        relayToggle(int(id));
+    } else if (force || (relayStatusTarget(int(id)) != (int(status) == 1))) {
+        relayStatus(int(id), int(status) == 1);
+    }
+    return true;
+}
+
+#endif
+
 void _rpnDump() {
     float value;
     DEBUG_MSG_P(PSTR("[RPN] Stack:\n"));
@@ -160,7 +177,7 @@ void _rpnInit() {
     rpn_init(_rpn_ctxt);
 
     // Time functions need NTP support
-    // TODO: since 1.14.2, timelib+ntpclientlib are no longer used with latest Cores
+    // TODO: since 1.15.0, timelib+ntpclientlib are no longer used with latest Cores
     //       `now` is always in UTC, `utc_...` functions to be used instead to convert time
     #if NTP_SUPPORT && !NTP_LEGACY_SUPPORT
         rpn_operator_set(_rpn_ctxt, "utc", 0, _rpnNtpNow);
@@ -239,16 +256,14 @@ void _rpnInit() {
     // Accept relay number and numeric API status value (0, 1 and 2)
     #if RELAY_SUPPORT
 
+        // apply status and reset timers when called
+        rpn_operator_set(_rpn_ctxt, "relay_reset", 2, [](rpn_context & ctxt) {
+            return _rpnRelayStatus(ctxt, true);
+        });
+
+        // only update status when target status differs, keep running timers
         rpn_operator_set(_rpn_ctxt, "relay", 2, [](rpn_context & ctxt) {
-            float status, id;
-            rpn_stack_pop(ctxt, id);
-            rpn_stack_pop(ctxt, status);
-            if (int(status) == 2) {
-                relayToggle(int(id));
-            } else {
-                relayStatus(int(id), int(status) == 1);
-            }
-            return true;
+            return _rpnRelayStatus(ctxt, false);
         });
 
     #endif // RELAY_SUPPORT == 1
@@ -282,7 +297,7 @@ void _rpnInit() {
 
 void _rpnInitCommands() {
 
-    terminalRegisterCommand(F("RPN.VARS"), [](Embedis* e) {
+    terminalRegisterCommand(F("RPN.VARS"), [](const terminal::CommandContext&) {
         unsigned char num = rpn_variables_size(_rpn_ctxt);
         if (0 == num) {
             DEBUG_MSG_P(PSTR("[RPN] No variables\n"));
@@ -298,7 +313,7 @@ void _rpnInitCommands() {
         terminalOK();
     });
 
-    terminalRegisterCommand(F("RPN.OPS"), [](Embedis* e) {
+    terminalRegisterCommand(F("RPN.OPS"), [](const terminal::CommandContext&) {
         unsigned char num = _rpn_ctxt.operators.size();
         DEBUG_MSG_P(PSTR("[RPN] Operators:\n"));
         for (unsigned char i=0; i<num; i++) {
@@ -307,10 +322,10 @@ void _rpnInitCommands() {
         terminalOK();
     });
 
-    terminalRegisterCommand(F("RPN.TEST"), [](Embedis* e) {
-        if (e->argc == 2) {
-            DEBUG_MSG_P(PSTR("[RPN] Running \"%s\"\n"), e->argv[1]);
-            rpn_process(_rpn_ctxt, e->argv[1], true);
+    terminalRegisterCommand(F("RPN.TEST"), [](const terminal::CommandContext& ctx) {
+        if (ctx.argc == 2) {
+            DEBUG_MSG_P(PSTR("[RPN] Running \"%s\"\n"), ctx.argv[1].c_str());
+            rpn_process(_rpn_ctxt, ctx.argv[1].c_str(), true);
             _rpnDump();
             rpn_stack_clear(_rpn_ctxt);
             terminalOK();
