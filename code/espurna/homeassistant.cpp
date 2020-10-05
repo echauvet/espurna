@@ -13,6 +13,7 @@ Copyright (C) 2017-2019 by Xose Pérez <xose dot perez at gmail dot com>
 #include <Ticker.h>
 #include <Schedule.h>
 
+#include "curtain_kingart.h"
 #include "light.h"
 #include "mqtt.h"
 #include "relay.h"
@@ -149,6 +150,9 @@ struct ha_discovery_t {
     void prepareSwitches(ha_config_t& config);
     #if SENSOR_SUPPORT
         void prepareMagnitudes(ha_config_t& config);
+    #endif
+    #if KINGART_CURTAIN_SUPPORT
+        void prepareCurtain(ha_config_t& config);
     #endif
 
     Ticker timer;
@@ -320,6 +324,72 @@ void ha_discovery_t::prepareSwitches(ha_config_t& config) {
 
 // -----------------------------------------------------------------------------
 
+// -----------------------------------------------------------------------------
+// CURTAINS
+// -----------------------------------------------------------------------------
+
+#if KINGART_CURTAIN_SUPPORT
+
+void _haSendCurtain(JsonObject& config) {
+
+    String name = getSetting("hostname");
+
+    config.set("name", _haFixName(name));
+
+    //TODO adapt from the config
+    config["device_class"] = "shutter";
+
+    //TODO make the payload handler instead of raw values
+    //COMMAND
+    config["command_topic"] = mqttTopic(MQTT_TOPIC_CURTAIN, true);
+    config["payload_open"] = 0; //PayloadStatus::On
+    config["payload_close"] = 100;
+    config["payload_stop"] = "pause";
+
+    //POSITION
+    config["set_position_topic"] = mqttTopic(MQTT_TOPIC_CURTAIN, true);
+    config["position_topic"] = mqttTopic(MQTT_TOPIC_CURTAIN, false);
+    config["position_open"] = 0; //PayloadStatus::On
+    config["position_closed"] = 100;
+
+    //AVAILABILITY
+    config["availability_topic"] = mqttTopic(MQTT_TOPIC_STATUS, false);
+    config["payload_available"] = mqttPayloadStatus(true);
+    config["payload_not_available"] = mqttPayloadStatus(false);
+
+}
+
+void ha_discovery_t::prepareCurtain(ha_config_t& config) {
+
+    // Note: because none of the keys are erased, use a separate object to avoid accidentally sending magnitude data
+    JsonObject& root = config.jsonBuffer.createObject();
+
+    for (unsigned char i=0; i<1; i++) {
+
+        String topic = getSetting("haPrefix", HOMEASSISTANT_PREFIX) +
+            "/cover"  +
+            "/" + getSetting("hostname") + "_" + String(i) +
+            "/config";
+        String message;
+
+        if (_ha_enabled) {
+            _haSendCurtain(root);
+            root["uniq_id"] = getIdentifier() + "_" + switchType + "_" + String(i);
+            root["device"] = config.deviceConfig;
+
+            message.reserve(root.measureLength());
+            root.printTo(message);
+        }
+
+        add(topic, message);
+    }
+}
+
+
+ #endif // KINGART_CURTAIN_SUPPORT
+
+// -----------------------------------------------------------------------------
+
 constexpr const size_t HA_YAML_BUFFER_SIZE = 1024;
 
 void _haSwitchYaml(unsigned char index, JsonObject& root) {
@@ -395,6 +465,47 @@ void _haSensorYaml(unsigned char index, JsonObject& root) {
 
 #endif // SENSOR_SUPPORT
 
+#if KINGART_CURTAIN_SUPPORT
+
+void _haCurtainYaml(JsonObject& root) {
+
+    String output;
+    output.reserve(HA_YAML_BUFFER_SIZE);
+
+    JsonObject& config = root.createNestedObject("config");
+    config["platform"] = "mqtt";
+    _haSendCurtain(config);
+
+    int index = 0;
+    if (index == 0) output += "\n\ncover:";
+    output += "\n";
+    bool first = true;
+
+    for (auto kv : config) {
+        if (first) {
+            output += "  - ";
+            first = false;
+        } else {
+            output += "    ";
+        }
+        output += kv.key;
+        output += ": ";
+        if (strncmp(kv.key, "payload_", strlen("payload_")) == 0) {
+            output += _haFixPayload(kv.value.as<String>());
+        } else {
+            output += kv.value.as<String>();
+        }
+        output += "\n";
+    }
+    output += " ";
+
+    root.remove("config");
+    root["haConfig"] = output;
+}
+
+#endif // KINGART_CURTAIN_SUPPORT
+
+
 void _haGetDeviceConfig(JsonObject& config) {
     config.createNestedArray("identifiers").add(getIdentifier());
     config["name"] = getSetting("desc", getSetting("hostname"));
@@ -426,6 +537,9 @@ void _haSend() {
     _ha_discovery->prepareSwitches(config);
     #if SENSOR_SUPPORT
         _ha_discovery->prepareMagnitudes(config);
+    #endif
+    #if KINGART_CURTAIN_SUPPORT
+         _ha_discovery->prepareCurtain(config);
     #endif
     
     _ha_send_flag = false;
@@ -471,11 +585,19 @@ void _haWebSocketOnConnected(JsonObject& root) {
 void _haWebSocketOnAction(uint32_t client_id, const char * action, JsonObject& data) {
     if (strcmp(action, "haconfig") == 0) {
         ws_on_send_callback_list_t callbacks;
+        int callbacks_count = 0;
         #if SENSOR_SUPPORT
-            callbacks.reserve(magnitudeCount() + relayCount());
-        #else
-            callbacks.reserve(relayCount());
+            callbacks_count += magnitudeCount();
         #endif // SENSOR_SUPPORT
+            
+        callbacks_count += relayCount();
+
+        #if KINGART_CURTAIN_SUPPORT
+            callbacks_count++;
+        #endif
+
+        callbacks.reserve(callbacks_count);
+
         {
             for (unsigned char idx=0; idx<relayCount(); ++idx) {
                 callbacks.push_back([idx](JsonObject& root) {
@@ -483,6 +605,7 @@ void _haWebSocketOnAction(uint32_t client_id, const char * action, JsonObject& d
                 });
             }
         }
+
         #if SENSOR_SUPPORT
         {
             for (unsigned char idx=0; idx<magnitudeCount(); ++idx) {
@@ -492,6 +615,16 @@ void _haWebSocketOnAction(uint32_t client_id, const char * action, JsonObject& d
             }
         }
         #endif // SENSOR_SUPPORT
+
+        #if KINGART_CURTAIN_SUPPORT
+        {  
+            unsigned char idx=0;
+            callbacks.push_back([idx](JsonObject& root) {
+                _haCurtainYaml(root);
+            }); 
+        }
+        #endif // KINGART_CURTAIN_SUPPORT
+
         if (callbacks.size()) wsPostSequence(client_id, std::move(callbacks));
     }
 }

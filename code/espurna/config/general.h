@@ -1200,6 +1200,9 @@
 #define MQTT_TOPIC_NOTIFY_TEMP_RANGE_MIN "notify_temp_range_min"
 #define MQTT_TOPIC_NOTIFY_TEMP_RANGE_MAX "notify_temp_range_max"
 
+// Curtain module
+#define MQTT_TOPIC_CURTAIN          "curtain"
+
 
 #ifndef MQTT_STATUS_ONLINE
 #define MQTT_STATUS_ONLINE          "1"         // Value for the device ON message
