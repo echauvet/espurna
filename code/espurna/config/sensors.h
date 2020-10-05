@@ -69,18 +69,6 @@
 #define SENSOR_ADDRESS_TOPIC                "address"       // Topic to publish sensor addresses
 
 
-#ifndef SENSOR_TEMPERATURE_UNITS
-#define SENSOR_TEMPERATURE_UNITS            TMP_CELSIUS     // Temperature units (TMP_CELSIUS | TMP_FAHRENHEIT)
-#endif
-
-#ifndef SENSOR_ENERGY_UNITS
-#define SENSOR_ENERGY_UNITS                 ENERGY_JOULES   // Energy units (ENERGY_JOULES | ENERGY_KWH)
-#endif
-
-#ifndef SENSOR_POWER_UNITS
-#define SENSOR_POWER_UNITS                  POWER_WATTS     // Power units (POWER_WATTS | POWER_KILOWATTS)
-#endif
-
 // -----------------------------------------------------------------------------
 // Magnitude offset correction
 // -----------------------------------------------------------------------------
@@ -284,8 +272,9 @@
 #define CSE7766_SUPPORT                 0
 #endif
 
-#ifndef CSE7766_PIN
-#define CSE7766_PIN                     1       // TX pin from the CSE7766
+#ifndef CSE7766_RX_PIN
+#define CSE7766_RX_PIN                  3      // RX pin connected to the CSE7766
+                                               // As we never transmit anything, this is the only pin used
 #endif
 
 #ifndef CSE7766_PIN_INVERSE
@@ -309,7 +298,7 @@
 #endif
 
 #ifndef DIGITAL1_PIN
-#define DIGITAL1_PIN                     2
+#define DIGITAL1_PIN                    5
 #endif
 
 #ifndef DIGITAL1_PIN_MODE
@@ -321,7 +310,7 @@
 #endif
 
 #ifndef DIGITAL2_PIN
-#define DIGITAL2_PIN                     2
+#define DIGITAL2_PIN                     GPIO_NONE
 #endif
 
 #ifndef DIGITAL2_PIN_MODE
@@ -333,7 +322,7 @@
 #endif
 
 #ifndef DIGITAL3_PIN
-#define DIGITAL3_PIN                     2
+#define DIGITAL3_PIN                     GPIO_NONE
 #endif
 
 #ifndef DIGITAL3_PIN_MODE
@@ -345,7 +334,7 @@
 #endif
 
 #ifndef DIGITAL4_PIN
-#define DIGITAL4_PIN                     2
+#define DIGITAL4_PIN                     GPIO_NONE
 #endif
 
 #ifndef DIGITAL4_PIN_MODE
@@ -357,7 +346,7 @@
 #endif
 
 #ifndef DIGITAL5_PIN
-#define DIGITAL5_PIN                     2
+#define DIGITAL5_PIN                     GPIO_NONE
 #endif
 
 #ifndef DIGITAL5_PIN_MODE
@@ -369,7 +358,7 @@
 #endif
 
 #ifndef DIGITAL6_PIN
-#define DIGITAL6_PIN                     2
+#define DIGITAL6_PIN                     GPIO_NONE
 #endif
 
 #ifndef DIGITAL6_PIN_MODE
@@ -381,7 +370,7 @@
 #endif
 
 #ifndef DIGITAL7_PIN
-#define DIGITAL7_PIN                     2
+#define DIGITAL7_PIN                     GPIO_NONE
 #endif
 
 #ifndef DIGITAL7_PIN_MODE
@@ -393,7 +382,7 @@
 #endif
 
 #ifndef DIGITAL8_PIN
-#define DIGITAL8_PIN                     2
+#define DIGITAL8_PIN                     GPIO_NONE
 #endif
 
 #ifndef DIGITAL8_PIN_MODE
@@ -503,13 +492,8 @@
 #define EVENTS_SUPPORT                  0       // Do not build with counter support by default
 #endif
 
-#ifndef EVENTS1_TRIGGER
-#define EVENTS1_TRIGGER                  1       // 1 to trigger callback on events,
-                                                // 0 to only count them and report periodically
-#endif
-
 #ifndef EVENTS1_PIN
-#define EVENTS1_PIN                      2       // GPIO to monitor
+#define EVENTS1_PIN                      5       // GPIO to monitor
 #endif
 
 #ifndef EVENTS1_PIN_MODE
@@ -524,13 +508,8 @@
 #define EVENTS1_DEBOUNCE                 50      // Do not register events within less than 50 millis
 #endif
 
-#ifndef EVENTS2_TRIGGER
-#define EVENTS2_TRIGGER                  1       // 1 to trigger callback on events,
-                                                // 0 to only count them and report periodically
-#endif
-
 #ifndef EVENTS2_PIN
-#define EVENTS2_PIN                      2       // GPIO to monitor
+#define EVENTS2_PIN                      GPIO_NONE       // GPIO to monitor
 #endif
 
 #ifndef EVENTS2_PIN_MODE
@@ -545,13 +524,8 @@
 #define EVENTS2_DEBOUNCE                 50      // Do not register events within less than 50 millis
 #endif
 
-#ifndef EVENTS3_TRIGGER
-#define EVENTS3_TRIGGER                  1       // 1 to trigger callback on events,
-                                                // 0 to only count them and report periodically
-#endif
-
 #ifndef EVENTS3_PIN
-#define EVENTS3_PIN                      2       // GPIO to monitor
+#define EVENTS3_PIN                      GPIO_NONE       // GPIO to monitor
 #endif
 
 #ifndef EVENTS3_PIN_MODE
@@ -566,13 +540,8 @@
 #define EVENTS3_DEBOUNCE                 50      // Do not register events within less than 50 millis
 #endif
 
-#ifndef EVENTS4_TRIGGER
-#define EVENTS4_TRIGGER                  1       // 1 to trigger callback on events,
-                                                // 0 to only count them and report periodically
-#endif
-
 #ifndef EVENTS4_PIN
-#define EVENTS4_PIN                      2       // GPIO to monitor
+#define EVENTS4_PIN                      GPIO_NONE       // GPIO to monitor
 #endif
 
 #ifndef EVENTS4_PIN_MODE
@@ -587,13 +556,8 @@
 #define EVENTS4_DEBOUNCE                 50      // Do not register events within less than 50 millis
 #endif
 
-#ifndef EVENTS5_TRIGGER
-#define EVENTS5_TRIGGER                  1       // 1 to trigger callback on events,
-                                                // 0 to only count them and report periodically
-#endif
-
 #ifndef EVENTS5_PIN
-#define EVENTS5_PIN                      2       // GPIO to monitor
+#define EVENTS5_PIN                      GPIO_NONE       // GPIO to monitor
 #endif
 
 #ifndef EVENTS5_PIN_MODE
@@ -608,13 +572,8 @@
 #define EVENTS5_DEBOUNCE                 50      // Do not register events within less than 50 millis
 #endif
 
-#ifndef EVENTS6_TRIGGER
-#define EVENTS6_TRIGGER                  1       // 1 to trigger callback on events,
-                                                // 0 to only count them and report periodically
-#endif
-
 #ifndef EVENTS6_PIN
-#define EVENTS6_PIN                      2       // GPIO to monitor
+#define EVENTS6_PIN                      GPIO_NONE       // GPIO to monitor
 #endif
 
 #ifndef EVENTS6_PIN_MODE
@@ -629,13 +588,8 @@
 #define EVENTS6_DEBOUNCE                 50      // Do not register events within less than 50 millis
 #endif
 
-#ifndef EVENTS7_TRIGGER
-#define EVENTS7_TRIGGER                  1       // 1 to trigger callback on events,
-                                                // 0 to only count them and report periodically
-#endif
-
 #ifndef EVENTS7_PIN
-#define EVENTS7_PIN                      2       // GPIO to monitor
+#define EVENTS7_PIN                      GPIO_NONE       // GPIO to monitor
 #endif
 
 #ifndef EVENTS7_PIN_MODE
@@ -650,13 +604,8 @@
 #define EVENTS7_DEBOUNCE                 50      // Do not register events within less than 50 millis
 #endif
 
-#ifndef EVENTS8_TRIGGER
-#define EVENTS8_TRIGGER                  1       // 1 to trigger callback on events,
-                                                // 0 to only count them and report periodically
-#endif
-
 #ifndef EVENTS8_PIN
-#define EVENTS8_PIN                      2       // GPIO to monitor
+#define EVENTS8_PIN                      GPIO_NONE       // GPIO to monitor
 #endif
 
 #ifndef EVENTS8_PIN_MODE
@@ -681,7 +630,7 @@
 #endif
 
 #ifndef GEIGER_PIN
-#define GEIGER_PIN                      D1       // GPIO to monitor "D1" => "GPIO5"
+#define GEIGER_PIN                      5       // D1
 #endif
 
 #ifndef GEIGER_PIN_MODE
@@ -781,39 +730,39 @@
 // LDR sensor
 // Enable support by passing LDR_SUPPORT=1 build flag
 //------------------------------------------------------------------------------
- 
+
 #ifndef LDR_SUPPORT
 #define LDR_SUPPORT                     0
 #endif
- 
+
 #ifndef LDR_SAMPLES
 #define LDR_SAMPLES                     10      // Number of samples
 #endif
- 
+
 #ifndef LDR_DELAY
 #define LDR_DELAY                       0       // Delay between samples in micros
 #endif
- 
+
 #ifndef LDR_TYPE
 #define LDR_TYPE                        LDR_GL5528
 #endif
- 
+
 #ifndef LDR_ON_GROUND
 #define LDR_ON_GROUND                   true
 #endif
- 
+
 #ifndef LDR_RESISTOR
 #define LDR_RESISTOR                    10000   // Resistance
 #endif
- 
+
 #ifndef LDR_MULTIPLICATION
 #define LDR_MULTIPLICATION              32017200
 #endif
- 
+
 #ifndef LDR_POWER
 #define LDR_POWER                       1.5832
 #endif
- 
+
 //------------------------------------------------------------------------------
 // MHZ19 CO2 sensor
 // Enable support by passing MHZ19_SUPPORT=1 build flag
@@ -977,19 +926,20 @@
 #endif
 
 #ifndef PZEM004T_USE_SOFT
-#define PZEM004T_USE_SOFT               0       // Software serial is not working atm, use hardware serial
+#define PZEM004T_USE_SOFT               0       // By default, use Hardware serial with GPIO15 (TX) and GPIO13 (RX)
 #endif
 
 #ifndef PZEM004T_RX_PIN
-#define PZEM004T_RX_PIN                 13      // Software serial RX GPIO (if PZEM004T_USE_SOFT == 1)
+#define PZEM004T_RX_PIN                 13      // Serial RX GPIO (if PZEM004T_USE_SOFT == 1, creates a SoftwareSerial object)
 #endif
 
 #ifndef PZEM004T_TX_PIN
-#define PZEM004T_TX_PIN                 15      // Software serial TX GPIO (if PZEM004T_USE_SOFT == 1)
+#define PZEM004T_TX_PIN                 15      // Serial TX GPIO (if PZEM004T_USE_SOFT == 1, creates a SoftwareSerial object)
 #endif
 
 #ifndef PZEM004T_HW_PORT
 #define PZEM004T_HW_PORT                Serial  // Hardware serial port (if PZEM004T_USE_SOFT == 0)
+                                                // ESP8266: Serial1 does not allow receiving data, no point in changing this setting
 #endif
 
 #ifndef PZEM004T_ADDRESSES
@@ -1002,6 +952,36 @@
 
 #ifndef PZEM004T_MAX_DEVICES
 #define PZEM004T_MAX_DEVICES            3
+#endif
+
+//------------------------------------------------------------------------------
+// PZEM004T **V3.0** based power monitor
+// Enable support by passing PZEM004TV30_SUPPORT=1 build flag
+//------------------------------------------------------------------------------
+
+#ifndef PZEM004TV30_SUPPORT
+#define PZEM004TV30_SUPPORT                0
+#endif
+
+#ifndef PZEM004TV30_ADDRESS
+#define PZEM004TV30_ADDRESS                0xF8    // Default: factory value
+#endif
+
+#ifndef PZEM004TV30_USE_SOFT
+#define PZEM004TV30_USE_SOFT               0       // By default, use Hardware serial with GPIO15 (TX) and GPIO13 (RX)
+                                                   // (but, make sure that DEBUG_SERIAL_SUPPORT is set to 0)
+#endif
+
+#ifndef PZEM004TV30_RX_PIN
+#define PZEM004TV30_RX_PIN                 13      // Serial RX GPIO (if PZEM004T_USE_SOFT == 1, creates a SoftwareSerial object)
+#endif
+
+#ifndef PZEM004TV30_TX_PIN
+#define PZEM004TV30_TX_PIN                 15      // Serial TX GPIO (if PZEM004T_USE_SOFT == 1, creates a SoftwareSerial object)
+#endif
+
+#ifndef PZEM004TV30_DEBUG
+#define PZEM004TV30_DEBUG                  0
 #endif
 
 //------------------------------------------------------------------------------
@@ -1212,6 +1192,11 @@
 // MAX6675
 // Enable support by passing MAX6675_SUPPORT=1 build flag
 //------------------------------------------------------------------------------
+
+#ifndef MAX6675_SUPPORT
+#define MAX6675_SUPPORT                              0
+#endif
+
 #ifndef MAX6675_CS_PIN
 #define MAX6675_CS_PIN                               13
 #endif
@@ -1271,6 +1256,29 @@
 #define SI1145_ADDRESS                   0x60
 #endif
 
+//------------------------------------------------------------------------------
+// BME680
+// Enable support by passing BME680_SUPPORT=1 build flag
+//------------------------------------------------------------------------------
+
+#ifndef BME680_SUPPORT
+#define BME680_SUPPORT                              0
+#endif
+
+#ifndef BME680_I2C_ADDRESS
+#define BME680_I2C_ADDRESS                          0x00                                   // 0x00 means auto
+#endif
+
+#ifndef BME680_BSEC_CONFIG
+#define BME680_BSEC_CONFIG                          BME680_BSEC_CONFIG_GENERIC_33V_3S_4D   // BSEC config config value. By default, 3.3V as supply voltage,
+#endif                                                                                     // 3 seconds as maximum time between bsec_sensor_control` calls
+                                                                                           // and 4 days as the time considered for background calibration.
+
+#ifndef BME680_STATE_SAVE_INTERVAL
+#define BME680_STATE_SAVE_INTERVAL                  0                                      // How frequently (in milliseconds) should state be stored in
+#endif                                                                                     // non-volatile memory. A common value would be every 6h or
+                                                                                           // 360 * 60 * 1000 milliseconds. By default, this is disabled.
+
 // -----------------------------------------------------------------------------
 // ADC
 // -----------------------------------------------------------------------------
@@ -1324,6 +1332,7 @@
     BH1750_SUPPORT || \
     BMP180_SUPPORT || \
     BMX280_SUPPORT || \
+    BME680_SUPPORT || \
     EMON_ADC121_SUPPORT || \
     EMON_ADS1X15_SUPPORT || \
     SHT3X_I2C_SUPPORT || \
@@ -1359,6 +1368,7 @@
     ANALOG_SUPPORT || \
     BH1750_SUPPORT || \
     BMP180_SUPPORT || \
+    BME680_SUPPORT || \
     BMX280_SUPPORT || \
     CSE7766_SUPPORT || \
     DALLAS_SUPPORT || \
@@ -1394,7 +1404,8 @@
     V9261F_SUPPORT || \
     VEML6075_SUPPORT || \
     VL53L1X_SUPPORT || \
-    HDC1080_SUPPORT \
+    HDC1080_SUPPORT || \
+    PZEM004TV30_SUPPORT \
 )
 #endif
 

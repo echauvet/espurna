@@ -82,34 +82,6 @@ function zeroPad(number, positions) {
     return number.toString().padStart(positions, "0");
 }
 
-function loadTimeZones() {
-
-    var time_zones = [
-        -720, -660, -600, -570, -540,
-        -480, -420, -360, -300, -240,
-        -210, -180, -120, -60, 0,
-        60, 120, 180, 210, 240,
-        270, 300, 330, 345, 360,
-        390, 420, 480, 510, 525,
-        540, 570, 600, 630, 660,
-        720, 765, 780, 840
-    ];
-
-    for (var i in time_zones) {
-        var tz = time_zones[i];
-        var offset = tz >= 0 ? tz : -tz;
-        var text = "GMT" + (tz >= 0 ? "+" : "-") +
-            zeroPad(parseInt(offset / 60, 10), 2) + ":" +
-            zeroPad(offset % 60, 2);
-        $("select[name='ntpOffset']").append(
-            $("<option></option>")
-                .attr("value", tz)
-                .text(text)
-        );
-    }
-
-}
-
 function validatePassword(password) {
     // http://www.the-art-of-web.com/javascript/validate-password/
     // at least one lowercase and one uppercase letter or number
@@ -164,9 +136,9 @@ function validateFormHostname(form) {
     // No other symbols, punctuation characters, or blank spaces are permitted.
 
     // Negative lookbehind does not work in Javascript
-    // var re_hostname = new RegExp('^(?!-)[A-Za-z0-9-]{1,31}(?<!-)$');
+    // var re_hostname = new RegExp('^(?!-)[A-Za-z0-9-]{1,32}(?<!-)$');
 
-    var re_hostname = new RegExp('^(?!-)[A-Za-z0-9-]{0,30}[A-Za-z0-9]$');
+    var re_hostname = new RegExp('^(?!-)[A-Za-z0-9-]{0,31}[A-Za-z0-9]$');
 
     var hostname = $("input[name='hostname']", form);
     if ("true" !== hostname.attr("hasChanged")) {
@@ -1897,6 +1869,14 @@ function processData(data) {
             return;
         }
 
+        if ("pzemVisible" === key) {
+            $("input[name='snsSave']").prop("disabled", true);
+            $("input[name='snsSave']")
+                .parent().parent().find(".hint")
+                .text("PZEM004 module saves the energy data on it's own")
+            return;
+        }
+
         <!-- endRemoveIf(!sensor)-->
 
         // ---------------------------------------------------------------------
@@ -2315,7 +2295,6 @@ function connectToCurrentURL() {
 $(function() {
 
     initMessages();
-    loadTimeZones();
     createCheckboxes();
     setInterval(function() { keepTime(); }, 1000);
 

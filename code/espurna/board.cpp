@@ -4,7 +4,7 @@ BOARD MODULE
 
 */
 
-#include "board.h"
+#include "espurna.h"
 #include "relay.h"
 #include "sensor.h"
 
@@ -21,11 +21,7 @@ PROGMEM const char espurna_modules[] =
         "BROKER "
     #endif
     #if BUTTON_SUPPORT
-    #if BUTTON_EVENTS_SOURCE == BUTTON_EVENTS_SOURCE_GENERIC
         "BUTTON "
-    #else
-        "BUTTON_DUAL "
-    #endif
     #endif
     #if DEBUG_SERIAL_SUPPORT
         "DEBUG_SERIAL "
@@ -81,11 +77,17 @@ PROGMEM const char espurna_modules[] =
     #if NTP_SUPPORT
         "NTP "
     #endif
+    #if PROMETHEUS_SUPPORT
+        "METRICS "
+    #endif
+    #if RELAY_SUPPORT
+        "RELAY "
+    #endif
     #if RFM69_SUPPORT
         "RFM69 "
     #endif
-    #if RF_SUPPORT
-        "RF "
+    #if RFB_SUPPORT
+        "RFB "
     #endif
     #if RPN_RULES_SUPPORT
         "RPN_RULES "
@@ -202,6 +204,9 @@ PROGMEM const char espurna_sensors[] =
     #endif
     #if BMX280_SUPPORT
         "BMX280 "
+    #endif
+    #if BME680_SUPPORT
+        "BME680 "
     #endif
     #if CSE7766_SUPPORT
         "CSE7766 "
@@ -559,7 +564,7 @@ int getBoardId() {
         return 96;
     #elif defined(HELTEC_TOUCHRELAY)
         return 97;
-    #elif defined(ZHILDE_EU44_W)
+    #elif defined(ZHILDE_44EU_W)
         return 98;
     #elif defined(ALLNET_4DUINO_IOT_WLAN_RELAIS)
         return 99;
@@ -679,6 +684,10 @@ int getBoardId() {
         return 156;
     #elif defined(GOSUND_WP3)
         return 157;
+    #elif defined(GENERIC_AG_L4_V3)
+        return 158;
+    #elif defined(PRODINO_WIFI)
+        return 159;
     #else
         return -1; // CUSTOM
     #endif

@@ -40,7 +40,13 @@ extern "C" {
 #define TCP_MSS (1460)
 #endif
 
-using wifi_callback_f = std::function<void(justwifi_messages_t code, char * parameter)>;
+using wifi_callback_f = void(*)(justwifi_messages_t code, char * parameter);
+
+enum class WiFiApMode {
+    Disabled,
+    Enabled,
+    Fallback
+};
 
 uint8_t wifiState();
 void wifiReconnectCheck();
@@ -52,9 +58,12 @@ String getIP();
 void wifiDebug();
 void wifiDebug(WiFiMode_t modes);
 
+WiFiApMode wifiApMode();
 void wifiStartAP();
 void wifiStartSTA();
 void wifiDisconnect();
+void wifiTurnOff();
+void wifiTurnOn();
 
 void wifiStartWPS();
 void wifiStartSmartConfig();

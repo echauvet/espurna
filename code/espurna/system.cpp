@@ -6,7 +6,7 @@ Copyright (C) 2019 by Xose Pérez <xose dot perez at gmail dot com>
 
 */
 
-#include "system.h"
+#include "espurna.h"
 
 #include <Ticker.h>
 #include <Schedule.h>
@@ -186,6 +186,7 @@ void systemLoop() {
 
     if (checkNeedsReset()) {
         reset();
+        return;
     }
 
     // -------------------------------------------------------------------------
@@ -251,7 +252,7 @@ void _systemSetupSpecificHardware() {
 
     // These devices use the hardware UART
     // to communicate to secondary microcontrollers
-    #if (RF_SUPPORT && !RFB_DIRECT) || (RELAY_PROVIDER == RELAY_PROVIDER_DUAL) || (RELAY_PROVIDER == RELAY_PROVIDER_STM)
+    #if (RFB_SUPPORT && (RFB_PROVIDER == RFB_PROVIDER_EFM8BB1)) || (RELAY_PROVIDER == RELAY_PROVIDER_DUAL) || (RELAY_PROVIDER == RELAY_PROVIDER_STM)
         Serial.begin(SERIAL_BAUDRATE);
     #endif
 

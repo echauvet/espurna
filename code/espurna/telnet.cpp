@@ -25,6 +25,62 @@ Updated to use WiFiServer and support reverse connections by Niek van der Maas <
 #include "board.h"
 #include "ws.h"
 
+#if TELNET_SERVER == TELNET_SERVER_ASYNC
+
+#include <ESPAsyncTCP.h>
+
+struct AsyncBufferedClient {
+    public:
+        constexpr static size_t BuffersMax =
+#if (TCP_MSS == 1460)
+            2ul;
+#else
+            5ul;
+#endif
+
+        using buffer_t = std::vector<uint8_t>;
+
+        explicit AsyncBufferedClient(AsyncClient* client);
+
+        size_t write(char c);
+        size_t write(const char* data, size_t size=0);
+
+        void flush();
+        size_t available();
+
+        bool connect(const char *host, uint16_t port);
+        void close(bool now = false);
+        bool connected();
+
+    private:
+        void _addBuffer();
+
+        static void _trySend(AsyncBufferedClient* client);
+        static void _s_onAck(void* client_ptr, AsyncClient*, size_t, uint32_t);
+        static void _s_onPoll(void* client_ptr, AsyncClient* client);
+
+        std::unique_ptr<AsyncClient> _client;
+        std::list<buffer_t> _buffers;
+};
+
+using TTelnetServer = AsyncServer;
+
+#if TELNET_SERVER_ASYNC_BUFFERED
+    using TTelnetClient = AsyncBufferedClient;
+#else
+    using TTelnetClient = AsyncClient;
+#endif // TELNET_SERVER_ASYNC_BUFFERED
+
+#elif TELNET_SERVER == TELNET_SERVER_WIFISERVER
+
+using TTelnetServer = WiFiServer;
+using TTelnetClient = WiFiClient;
+
+#else
+#error "TELNET_SERVER value was not properly set"
+#endif
+
+
 TTelnetServer _telnetServer(TELNET_PORT);
 std::unique_ptr<TTelnetClient> _telnetClients[TELNET_MAX_CLIENTS];
 
@@ -171,8 +227,9 @@ void AsyncBufferedClient::_addBuffer() {
 
 size_t AsyncBufferedClient::write(const char* data, size_t size) {
 
-    if (_buffers.size() > AsyncBufferedClient::BUFFERS_MAX) return 0;
+    if (_buffers.size() > AsyncBufferedClient::BuffersMax) return 0;
 
+    // TODO: just waiting for onPoll is insufficient, we need to push data asap
     size_t written = 0;
     if (_buffers.empty()) {
         written = _client->add(data, size);
@@ -306,9 +363,8 @@ void _telnetNotifyConnected(unsigned char i) {
     // If there is no terminal support automatically dump info and crash data
     #if DEBUG_SUPPORT
     #if not TERMINAL_SUPPORT
-        info();
         wifiDebug();
-        crashDump();
+        crashDump(terminalDefaultStream());
         crashClear();
     #endif
     #endif

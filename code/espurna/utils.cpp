@@ -6,9 +6,7 @@ Copyright (C) 2017-2019 by Xose Pérez <xose dot perez at gmail dot com>
 
 */
 
-#include <limits>
-
-#include "utils.h"
+#include "espurna.h"
 
 #include "board.h"
 #include "influxdb.h"
@@ -20,6 +18,7 @@ Copyright (C) 2017-2019 by Xose Pérez <xose dot perez at gmail dot com>
 
 #include "libs/TypeChecks.h"
 
+#include <limits>
 
 //--------------------------------------------------------------------------------
 // Reset reasons
@@ -221,7 +220,7 @@ unsigned int getInitialFreeHeap() {
 // -----------------------------------------------------------------------------
 namespace Heartbeat {
 
-    enum Report : uint32_t { 
+    enum Report : uint32_t {
         Status = 1 << 1,
         Ssid = 1 << 2,
         Ip = 1 << 3,
@@ -379,8 +378,10 @@ void heartbeat() {
             if (hb_cfg & Heartbeat::Freeheap)
                 mqttSend(MQTT_TOPIC_FREEHEAP, String(heap_stats.available).c_str());
 
+            #if RELAY_SUPPORT
             if (hb_cfg & Heartbeat::Relay)
                 relayMQTT();
+            #endif
 
             #if (LIGHT_PROVIDER != LIGHT_PROVIDER_NONE)
                 if (hb_cfg & Heartbeat::Light)
@@ -433,7 +434,7 @@ void heartbeat() {
 
         if ((hb_cfg & Heartbeat::Vcc) && (ADC_MODE_VALUE == ADC_VCC))
             idbSend(MQTT_TOPIC_VCC, String(ESP.getVcc()).c_str());
-                    
+
         if (hb_cfg & Heartbeat::Loadavg)
             idbSend(MQTT_TOPIC_LOADAVG, String(systemLoadAverage()).c_str());
 
@@ -790,4 +791,62 @@ char* strnstr(const char* buffer, const char* token, size_t n) {
   }
 
   return nullptr;
+}
+
+// From a byte array to an hexa char array ("A220EE...", double the size)
+size_t hexEncode(const uint8_t * in, size_t in_size, char * out, size_t out_size) {
+    if ((2 * in_size + 1) > (out_size)) return 0;
+
+    static const char base16[] = "0123456789ABCDEF";
+    size_t index = 0;
+
+    while (index < in_size) {
+        out[(index*2)]   = base16[(in[index] & 0xf0) >> 4];
+        out[(index*2)+1] = base16[(in[index] & 0xf)];
+        ++index;
+    }
+
+    out[2*index] = '\0';
+
+    return index ? (1 + (2 * index)) : 0;
+}
+
+
+// From an hexa char array ("A220EE...") to a byte array (half the size)
+size_t hexDecode(const char* in, size_t in_size, uint8_t* out, size_t out_size) {
+    if ((in_size & 1) || (out_size < (in_size / 2))) {
+        return 0;
+    }
+
+    // We can only return small values
+    constexpr uint8_t InvalidByte { 255u };
+
+    auto char2byte = [](char ch) -> uint8_t {
+        if ((ch >= '0') && (ch <= '9')) {
+            return (ch - '0');
+        } else if ((ch >= 'a') && (ch <= 'f')) {
+            return 10 + (ch - 'a');
+        } else if ((ch >= 'A') && (ch <= 'F')) {
+            return 10 + (ch - 'A');
+        } else {
+            return InvalidByte;
+        }
+    };
+
+    size_t index = 0;
+    size_t out_index = 0;
+
+    while (index < in_size) {
+        const uint8_t lhs = char2byte(in[index]) << 4;
+        const uint8_t rhs = char2byte(in[index + 1]);
+        if ((InvalidByte != lhs) && (InvalidByte != rhs)) {
+            out[out_index++] = lhs | rhs;
+            index += 2;
+            continue;
+        }
+        out_index = 0;
+        break;
+    }
+
+    return out_index;
 }

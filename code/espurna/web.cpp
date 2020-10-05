@@ -14,11 +14,18 @@ Copyright (C) 2016-2019 by Xose Pérez <xose dot perez at gmail dot com>
 #include <functional>
 #include <memory>
 
-#include <Schedule.h>
-
 #include "system.h"
 #include "utils.h"
 #include "ntp.h"
+
+#include <Schedule.h>
+#include <Print.h>
+#include <Hash.h>
+#include <FS.h>
+
+#include <ArduinoJson.h>
+#include <ESPAsyncWebServer.h>
+#include <AsyncJson.h>
 
 #if WEB_EMBEDDED
 
@@ -266,9 +273,8 @@ void _onGetConfig(AsyncWebServerRequest *request) {
     #endif
 
     // Write the keys line by line (not sorted)
-    unsigned long count = settingsKeyCount();
-    for (unsigned int i=0; i<count; i++) {
-        String key = settingsKeyName(i);
+    auto keys = settingsKeys();
+    for (auto& key : keys) {
         String value = getSetting(key);
         response->printf(",\n\"%s\": \"%s\"", key.c_str(), value.c_str());
     }
@@ -463,10 +469,11 @@ void _onRequest(AsyncWebServerRequest *request){
 
     if (!_onAPModeRequest(request)) return;
 
-    // Send request to subscribers
-    for (unsigned char i = 0; i < _web_request_callbacks.size(); i++) {
-        bool response = (_web_request_callbacks[i])(request);
-        if (response) return;
+    // Send request to subscribers, break when request is 'handled' by the callback
+    for (auto& callback : _web_request_callbacks) {
+        if (callback(request)) {
+            return;
+        }
     }
 
     // No subscriber handled the request, return a 404 with implicit "Connection: close"

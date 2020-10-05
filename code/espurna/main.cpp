@@ -60,6 +60,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "uartmqtt.h"
 #include "web.h"
 #include "ws.h"
+#include "mcp23s08.h"
+#include "prometheus.h"
 
 std::vector<void_callback_f> _loop_callbacks;
 std::vector<void_callback_f> _reload_callbacks;
@@ -151,14 +153,10 @@ void setup() {
     info(true);
 
     wifiSetup();
-    #if OTA_ARDUINOOTA_SUPPORT
-        arduinoOtaSetup();
-    #endif
+    otaSetup();
+
     #if TELNET_SUPPORT
         telnetSetup();
-    #endif
-    #if OTA_CLIENT != OTA_CLIENT_NONE
-        otaClientSetup();
     #endif
 
     // -------------------------------------------------------------------------
@@ -186,11 +184,21 @@ void setup() {
     #endif
 
     // Multiple modules depend on the generic 'API' services
-    #if API_SUPPORT || TERMINAL_WEB_API_SUPPORT
+    #if API_SUPPORT || TERMINAL_WEB_API_SUPPORT || PROMETHEUS_SUPPORT
         apiCommonSetup();
     #endif
+
     #if API_SUPPORT
         apiSetup();
+    #endif
+
+    #if PROMETHEUS_SUPPORT
+        prometheusSetup();
+    #endif
+
+    // Hardware GPIO expander, needs to be available for modules down below
+    #if MCP23S08_SUPPORT
+        MCP23S08Setup();
     #endif
 
     // lightSetup must be called before relaySetup
@@ -238,7 +246,7 @@ void setup() {
     #if I2C_SUPPORT
         i2cSetup();
     #endif
-    #if RF_SUPPORT
+    #if RFB_SUPPORT
         rfbSetup();
     #endif
     #if ALEXA_SUPPORT

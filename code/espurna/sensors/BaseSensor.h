@@ -12,8 +12,6 @@
 
 #include "../sensor.h"
 
-using TSensorCallback = std::function<void(unsigned char, double)>;
-
 class BaseSensor {
 
     public:
@@ -22,7 +20,7 @@ class BaseSensor {
         BaseSensor() {}
 
         // Destructor
-        ~BaseSensor() {}
+        virtual ~BaseSensor() {}
 
         // Initialization method, must be idempotent
         virtual void begin() {}
@@ -87,9 +85,6 @@ class BaseSensor {
         // Convert slot # index to a magnitude # index
         virtual unsigned char local(unsigned char slot) { return 0; }
 
-        // Hook for event callback
-        void onEvent(TSensorCallback fn) { _callback = fn; };
-
         // Specify units attached to magnitudes
         virtual sensor::Unit units(unsigned char index) {
             switch (type(index)) {
@@ -117,9 +112,10 @@ class BaseSensor {
                 case MAGNITUDE_PM1dot0:
                 case MAGNITUDE_PM2dot5:
                     return sensor::Unit::MicrogrammPerCubicMeter;
+                case MAGNITUDE_CO:
                 case MAGNITUDE_CO2:
                 case MAGNITUDE_NO2:
-                case MAGNITUDE_CO:
+                case MAGNITUDE_VOC:
                     return sensor::Unit::PartsPerMillion;
                 case MAGNITUDE_LUX:
                     return sensor::Unit::Lux;
@@ -133,6 +129,10 @@ class BaseSensor {
                     return sensor::Unit::MicrosievertPerHour;
                 case MAGNITUDE_DISTANCE:
                     return sensor::Unit::Meter;
+                case MAGNITUDE_FREQUENCY:
+                    return sensor::Unit::Hertz;
+                case MAGNITUDE_PH:
+                    return sensor::Unit::Ph;
                 default:
                     return sensor::Unit::None;
             }
@@ -140,7 +140,6 @@ class BaseSensor {
 
     protected:
 
-        TSensorCallback _callback = NULL;
         unsigned char _sensor_id = 0x00;
         int _error = 0;
         bool _dirty = true;

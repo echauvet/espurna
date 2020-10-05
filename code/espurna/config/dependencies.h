@@ -49,11 +49,6 @@
 #define MQTT_SUPPORT                1
 #endif
 
-#if RF_SUPPORT
-#undef RELAY_SUPPORT
-#define RELAY_SUPPORT               1
-#endif
-
 #if LED_SUPPORT
 #undef BROKER_SUPPORT
 #define BROKER_SUPPORT              1               // If LED is enabled enable BROKER to supply status changes
@@ -190,12 +185,13 @@
 #endif
 
 //------------------------------------------------------------------------------
-// When using Dual / Lightfox Dual, notify that Serial should be used
+// Remove serial debug support completely in case hardware does not support it
+// TODO: provide runtime check as well?
 
-#if (BUTTON_EVENTS_SOURCE == BUTTON_EVENTS_SOURCE_ITEAD_SONOFF_DUAL) || \
-    (BUTTON_EVENTS_SOURCE == BUTTON_EVENTS_SOURCE_FOXEL_LIGHTFOX_DUAL)
+#if (BUTTON_PROVIDER_ITEAD_SONOFF_DUAL_SUPPORT) || \
+    (BUTTON_PROVIDER_FOXEL_LIGHTFOX_DUAL_SUPPORT)
 #if DEBUG_SERIAL_SUPPORT
-#warning "DEBUG_SERIAL_SUPPORT conflicts with the current BUTTON_EVENTS_SOURCE"
+#warning "DEBUG_SERIAL_SUPPORT will be disabled because it conflicts with the BUTTON_PROVIDER_{ITEAD_SONOFF_DUAL,FOXEL_LIGHTFOX_DUAL}"
 #undef DEBUG_SERIAL_SUPPORT
 #define DEBUG_SERIAL_SUPPORT 0
 #endif
@@ -214,10 +210,34 @@
 
 //------------------------------------------------------------------------------
 // We should always set MQTT_MAX_PACKET_SIZE
-//
 
 #if MQTT_LIBRARY == MQTT_LIBRARY_PUBSUBCLIENT
 #if not defined(MQTT_MAX_PACKET_SIZE)
 #warning "MQTT_MAX_PACKET_SIZE should be set in `build_flags = ...` of the environment! Default value is used instead."
 #endif
+#endif
+
+//------------------------------------------------------------------------------
+// Disable BME680 support if using Core version 2.3.0 due to memory constraints.
+
+#if BME680_SUPPORT && defined(ARDUINO_ESP8266_RELEASE_2_3_0)
+#warning "BME680_SUPPORT is not available when using Arduino Core 2.3.0 due to memory constraints. Please use Arduino Core 2.6.3+ instead (or set `platform = ${common.platform_latest}` for the latest version)."
+#undef BME680_SUPPORT
+#define BME680_SUPPORT 0
+#endif
+
+//------------------------------------------------------------------------------
+// Prometheus needs web server + request handler API
+
+#if PROMETHEUS_SUPPORT
+#undef WEB_SUPPORT
+#define WEB_SUPPORT 1
+#endif
+
+//------------------------------------------------------------------------------
+// Analog pin needs ADC_TOUT mode set up at compile time
+
+#if BUTTON_PROVIDER_ANALOG_SUPPORT
+#undef ADC_MODE_VALUE
+#define ADC_MODE_VALUE ADC_TOUT
 #endif

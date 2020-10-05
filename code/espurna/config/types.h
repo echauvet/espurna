@@ -15,9 +15,6 @@
 #define WIFI_STATE_WPS              4
 #define WIFI_STATE_SMARTCONFIG      8
 
-#define WIFI_AP_ALLWAYS             1
-#define WIFI_AP_FALLBACK            2
-
 //------------------------------------------------------------------------------
 // BUTTONS
 //------------------------------------------------------------------------------
@@ -60,10 +57,10 @@
 #define BUTTON_SET_PULLUP           ButtonMask::SetPullup
 #define BUTTON_SET_PULLDOWN         ButtonMask::SetPulldown
 
-// configure which type of event emitter is used
-#define BUTTON_EVENTS_SOURCE_GENERIC               0
-#define BUTTON_EVENTS_SOURCE_ITEAD_SONOFF_DUAL     1
-#define BUTTON_EVENTS_SOURCE_FOXEL_LIGHTFOX_DUAL   2
+// configure where do we get the button events
+#define BUTTON_PROVIDER_GENERIC               0
+#define BUTTON_PROVIDER_MCP23S08              1
+#define BUTTON_PROVIDER_ANALOG                2
 
 //------------------------------------------------------------------------------
 // ENCODER
@@ -103,6 +100,10 @@
 #define RELAY_PROVIDER_LIGHT        2
 #define RELAY_PROVIDER_RFBRIDGE     3
 #define RELAY_PROVIDER_STM          4
+#define RELAY_PROVIDER_MCP23S08     5
+
+#define RFB_PROVIDER_RCSWITCH       0
+#define RFB_PROVIDER_EFM8BB1        1
 
 #define RELAY_GROUP_SYNC_NORMAL      0
 #define RELAY_GROUP_SYNC_INVERSE     1
@@ -274,20 +275,6 @@
 #define UV_INDEX_EXTREME            4       // 11 or more means extreme risk of harm from unprotected sun exposure.
                                             // Take all precautions because unprotected skin and eyes can burn in minutes.
 
-//------------------------------------------------------------------------------
-// UNITS
-//------------------------------------------------------------------------------
-
-#define POWER_WATTS                 sensor::Unit::Watt
-#define POWER_KILOWATTS             sensor::Unit::Kilowatt
-
-#define ENERGY_JOULES               sensor::Unit::Joule
-#define ENERGY_KWH                  sensor::Unit::KilowattHour
-
-#define TMP_CELSIUS                 sensor::Unit::Celcius
-#define TMP_FAHRENHEIT              sensor::Unit::Farenheit
-#define TMP_KELVIN                  sensor::Unit::Kelvin
-
 //--------------------------------------------------------------------------------
 // Sensor ID
 // These should remain over time, do not modify them, only add new ones at the end
@@ -333,6 +320,8 @@
 #define SENSOR_T6613_ID             38
 #define SENSOR_SI1145_ID            39
 #define SENSOR_HDC1080_ID           40
+#define SENSOR_PZEM004TV30_ID       41
+#define SENSOR_BME680_ID            42
 
 //--------------------------------------------------------------------------------
 // Magnitudes
@@ -371,8 +360,13 @@
 #define MAGNITUDE_CO                29
 #define MAGNITUDE_RESISTANCE        30
 #define MAGNITUDE_PH                31
+#define MAGNITUDE_FREQUENCY         32
+#define MAGNITUDE_IAQ               33
+#define MAGNITUDE_IAQ_ACCURACY      34
+#define MAGNITUDE_IAQ_STATIC        35
+#define MAGNITUDE_VOC               36
 
-#define MAGNITUDE_MAX               32
+#define MAGNITUDE_MAX               38
 
 #define SENSOR_ERROR_OK             0       // No error
 #define SENSOR_ERROR_OUT_OF_RANGE   1       // Result out of sensor range

@@ -56,6 +56,8 @@ enum class Unit : int {
     CountsPerMinute,           // Unit of local dose rate (Geiger counting)
     MicrosievertPerHour,       // 2nd unit of local dose rate (Geiger counting)
     Meter,
+    Hertz,
+    Ph,
     Max_
 };
 
@@ -125,6 +127,14 @@ struct Energy {
     Ws ws;
 };
 
+struct Value {
+    double get();
+
+    double last;
+    double reported;
+    unsigned char decimals;
+};
+
 }
 
 BrokerDeclare(SensorReadBroker, void(const String&, unsigned char, double, const char*));
@@ -138,7 +148,9 @@ unsigned char magnitudeIndex(unsigned char index);
 String magnitudeTopicIndex(unsigned char index);
 
 unsigned char magnitudeCount();
-double magnitudeValue(unsigned char index);
+
+sensor::Value magnitudeValue(unsigned char index);
+void magnitudeFormat(const sensor::Value& value, char* output, size_t size);
 
 // XXX: without param name it is kind of vague what exactly unsigned char is
 //      consider adding stronger param type e.g. enum class

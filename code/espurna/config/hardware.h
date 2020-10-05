@@ -549,7 +549,7 @@
     #ifndef CSE7766_SUPPORT
     #define CSE7766_SUPPORT     1
     #endif
-    #define CSE7766_PIN         1
+    #define CSE7766_RX_PIN      3
 
 #elif defined(ITEAD_SONOFF_DUAL)
 
@@ -566,7 +566,7 @@
     #define BUTTON2_RELAY       2
     #define BUTTON3_RELAY       1
 
-    #define BUTTON_EVENTS_SOURCE    BUTTON_EVENTS_SOURCE_ITEAD_SONOFF_DUAL
+    #define BUTTON_PROVIDER_ITEAD_SONOFF_DUAL_SUPPORT    1
 
     // LEDs
     #define LED1_PIN            13
@@ -789,19 +789,23 @@
     #define LED1_PIN            13
     #define LED1_PIN_INVERSE    1
 
-    #define RF_SUPPORT          1
-
-    // Only used when RFB_DIRECT=1
-    #define RFB_RX_PIN          4
-    #define RFB_TX_PIN          5
+    #define RFB_SUPPORT         1
 
     // When using un-modified harware, ESPurna communicates with the secondary
     // MCU EFM8BB1 via UART at 19200 bps so we need to change the speed of
     // the port and remove UART noise on serial line
-    #if not RFB_DIRECT
+    #ifndef RFB_PROVIDER
+    #define RFB_PROVIDER        RFB_PROVIDER_EFM8BB1
+    #endif
+
+    #if RFB_PROVIDER == RFB_PROVIDER_EFM8BB1
     #define SERIAL_BAUDRATE         19200
     #define DEBUG_SERIAL_SUPPORT    0
     #endif
+
+    // Only used when RFB_PROVIDER is RCSWITCH
+    #define RFB_RX_PIN          4
+    #define RFB_TX_PIN          5
 
 #elif defined(ITEAD_SONOFF_B1)
 
@@ -975,7 +979,7 @@
 
     // CSE7766
     #define CSE7766_SUPPORT         1
-    #define CSE7766_PIN             1
+    #define CSE7766_RX_PIN          3
 
 #elif defined(ITEAD_SONOFF_S31_LITE)
 
@@ -1373,9 +1377,9 @@
     #define LIGHT_CH4_PIN       13      // WHITE
 
     // RF
-    #define RF_SUPPORT          1
-    #define RFB_DIRECT          1
-    #define RFB_RX_PIN          4
+    #define RFB_SUPPORT          1
+    #define RFB_PROVIDER         RFB_PROVIDER_RCSWITCH
+    #define RFB_RX_PIN           4
 
 #elif defined(MAGICHOME_ZJ_WFMN_C_11)
 
@@ -1765,6 +1769,9 @@
     #define OTA_ARDUINOOTA_SUPPORT   0
     #define OTA_CLIENT               OTA_CLIENT_NONE
 
+    // Web UI blob & MDNS are pretty large
+    #define WEB_EMBEDDED             0
+    #define MDNS_SERVER_SUPPORT      0
 
 // -----------------------------------------------------------------------------
 // ESPLive
@@ -2683,9 +2690,9 @@
     #endif
     #define DALLAS_PIN          2
 
-    #define RF_SUPPORT          1
-    #define RFB_DIRECT          1
-    #define RFB_RX_PIN          14
+    #define RFB_SUPPORT          1
+    #define RFB_PROVIDER         RFB_PROVIDER_RCSWITCH
+    #define RFB_RX_PIN           14
 
     #ifndef DIGITAL_SUPPORT
     #define DIGITAL_SUPPORT      1
@@ -2716,15 +2723,15 @@
 
 
 // -----------------------------------------------------------------------------
-// Zhilde ZLD-EU44-W
+// Zhilde ZLD-44EU-W
 // http://www.zhilde.com/product/60705150109-805652505/EU_WiFi_Surge_Protector_Extension_Socket_4_Outlets_works_with_Amazon_Echo_Smart_Power_Strip.html
 // -----------------------------------------------------------------------------
 
-#elif defined(ZHILDE_EU44_W)
+#elif defined(ZHILDE_44EU_W)
 
     // Info
     #define MANUFACTURER            "ZHILDE"
-    #define DEVICE                  "EU44_W"
+    #define DEVICE                  "44EU_W"
 
     // Based on the reporter, this product uses GPIO1 and 3 for the button
     // and onboard LED, so hardware serial should be disabled...
@@ -2747,6 +2754,32 @@
     #define RELAY5_TYPE             RELAY_TYPE_NORMAL
 
     // LEDs
+    #define LED1_PIN                1
+    #define LED1_PIN_INVERSE        1
+
+// -----------------------------------------------------------------------------
+// Zhilde ZLD-64EU-W
+// -----------------------------------------------------------------------------
+
+#elif defined(ZHILDE_64EU_W)
+
+    // Info
+    #define MANUFACTURER            "ZHILDE"
+    #define DEVICE                  "64EU_W"
+
+    // Based on https://templates.blakadder.com/ZLD64-EU-W.html ,
+    // This product uses GPIO1 for LED and 3 for the button, so hardware serial should be disabled...
+    #define DEBUG_SERIAL_SUPPORT    0
+
+    #define BUTTON1_PIN             3
+    #define BUTTON1_CONFIG          BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP | BUTTON_DEFAULT_HIGH
+    #define BUTTON1_PRESS           BUTTON_ACTION_NONE
+    #define BUTTON1_RELAY           3
+
+    #define RELAY1_PIN              5
+    #define RELAY2_PIN              4
+    #define RELAY3_PIN              14
+
     #define LED1_PIN                1
     #define LED1_PIN_INVERSE        1
 
@@ -3201,7 +3234,7 @@
     #ifndef CSE7766_SUPPORT
     #define CSE7766_SUPPORT     1
     #endif
-    #define CSE7766_PIN         1
+    #define CSE7766_RX_PIN      3
 
 // -----------------------------------------------------------------------------
 // Teckin SP21
@@ -3389,6 +3422,49 @@
     #define DEBUG_SERIAL_SUPPORT 0
 
 // ----------------------------------------------------------------------------------------
+//  Power socket 16A similar to BLITZWOLF_BWSHPX but button pin differs
+//  IMPORTANT, This template is for hardware version SP111_A_Wifi_Ver1.1 (as printed on the PCB)
+//  hhttps://www.amazon.de/-/en/Smallest-Consumption-Measuring-Function-Compatible/dp/B07PSMF47W
+// ----------------------------------------------------------------------------------------
+
+#elif defined(GOSUND_SP111)
+
+    // Info
+    #define MANUFACTURER                "GOSUND"
+    #define DEVICE                      "SP111"
+
+   // Buttons
+    #define BUTTON1_PIN                 13
+    #define BUTTON1_CONFIG              BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH
+    #define BUTTON1_RELAY               1
+
+    // Relays
+    #define RELAY1_PIN                  15
+    #define RELAY1_TYPE                 RELAY_TYPE_NORMAL
+
+    // LEDs
+    #define LED1_PIN                    2
+    #define LED1_PIN_INVERSE            1
+    #define LED2_PIN                    0
+    #define LED2_PIN_INVERSE            1
+    #define LED2_MODE                   LED_MODE_FINDME
+    #define LED2_RELAY                  1
+
+    // HJL01 / BL0937
+    #ifndef HLW8012_SUPPORT
+    #define HLW8012_SUPPORT             1
+    #endif
+    #define HLW8012_SEL_PIN             12
+    #define HLW8012_CF1_PIN             4
+    #define HLW8012_CF_PIN              5
+
+    #define HLW8012_SEL_CURRENT         LOW
+    #define HLW8012_CURRENT_RATIO       25740
+    #define HLW8012_VOLTAGE_RATIO       313400
+    #define HLW8012_POWER_RATIO         3414290
+    #define HLW8012_INTERRUPT_ON        FALLING
+
+// ----------------------------------------------------------------------------------------
 //  Homecube 16A is similar but some pins differ and it also has RGB LEDs
 //  https://www.amazon.de/gp/product/B07D7RVF56/ref=oh_aui_detailpage_o00_s01?ie=UTF8&psc=1
 // ----------------------------------------------------------------------------------------
@@ -3530,6 +3606,50 @@
     #define LIGHT_CH1_PIN               14       // RED
     #define LIGHT_CH2_PIN               13       // GREEN
     #define LIGHT_CH3_PIN               12      // BLUE
+
+// -----------------------------------------------------------------------------
+
+#elif defined(GENERIC_AG_L4_V3)
+
+    // Info
+    #define MANUFACTURER                "GENERIC"
+    #define DEVICE                      "AG_L4_V3"
+    #define RELAY_PROVIDER              RELAY_PROVIDER_LIGHT
+    #define LIGHT_PROVIDER              LIGHT_PROVIDER_DIMMER
+    #define DUMMY_RELAY_COUNT           1
+
+    // button 1: "power" button
+    #define BUTTON1_PIN                 13
+    #define BUTTON1_RELAY               1
+    #define BUTTON1_CONFIG              BUTTON_PUSHBUTTON | BUTTON_SET_PULLUP | BUTTON_DEFAULT_HIGH
+    #define BUTTON1_PRESS               BUTTON_ACTION_TOGGLE
+    #define BUTTON1_CLICK               BUTTON_ACTION_NONE
+    #define BUTTON1_DBLCLICK            BUTTON_ACTION_NONE
+    #define BUTTON1_LNGCLICK            BUTTON_ACTION_NONE
+    #define BUTTON1_LNGLNGCLICK         BUTTON_ACTION_RESET
+
+    // button 2: "wifi" button
+    #define BUTTON2_PIN                 2
+    #define BUTTON2_CONFIG              BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH
+    #define BUTTON2_PRESS               BUTTON_ACTION_TOGGLE
+    #define BUTTON2_CLICK               BUTTON_ACTION_NONE
+    #define BUTTON2_DBLCLICK            BUTTON_ACTION_NONE
+    #define BUTTON2_LNGCLICK            BUTTON_ACTION_NONE
+    #define BUTTON2_LNGLNGCLICK         BUTTON_ACTION_NONE
+
+    // LEDs
+    #define LED1_PIN                    5      // red status led
+    #define LED1_PIN_INVERSE            0
+
+    #define LED2_PIN                    16      // master light power
+    #define LED2_PIN_INVERSE            1
+    #define LED2_MODE                   LED_MODE_RELAY
+
+    // Light
+    #define LIGHT_CHANNELS              3
+    #define LIGHT_CH1_PIN               4        // RED
+    #define LIGHT_CH2_PIN               12       // GREEN
+    #define LIGHT_CH3_PIN               14       // BLUE
 
 // -----------------------------------------------------------------------------
 
@@ -4189,7 +4309,7 @@
     #define BUTTON3_RELAY           2
     #define BUTTON4_RELAY           1
 
-    #define BUTTON_EVENTS_SOURCE    BUTTON_EVENTS_SOURCE_FOXEL_LIGHTFOX_DUAL
+    #define BUTTON_PROVIDER_FOXEL_LIGHTFOX_DUAL_SUPPORT    1
 
 // -----------------------------------------------------------------------------
 // Teckin SP20
@@ -4535,9 +4655,6 @@
     #define HLW8012_POWER_RATIO         3414290
     #define HLW8012_INTERRUPT_ON        FALLING
 
-    #define SENSOR_ENERGY_UNITS         ENERGY_KWH
-    #define SENSOR_POWER_UNITS          POWER_WATTS
-
 // -----------------------------------------------------------------------------
 // Kogan Smarter Home Plug with Energy Meter (Australia)
 // Product code: KASPEMHA
@@ -4582,9 +4699,6 @@
     #define HLW8012_VOLTAGE_RATIO       282060
     #define HLW8012_POWER_RATIO         3414290
     #define HLW8012_INTERRUPT_ON        FALLING
-
-    #define SENSOR_ENERGY_UNITS         ENERGY_KWH
-    #define SENSOR_POWER_UNITS          POWER_WATTS
 
 // -----------------------------------------------------------------------------
 // KINGART_CURTAIN_SWITCH
@@ -4720,6 +4834,123 @@
     #define LED1_PIN_INVERSE        1
 
 // -----------------------------------------------------------------------------
+// Arlec Smart PC190HA Plug
+// https://templates.blakadder.com/arlec_PC190HA.html
+// -----------------------------------------------------------------------------
+
+#elif defined(ARLEC_PC190HA)
+
+    // Info
+    #define MANUFACTURER        "ARLEC"
+    #define DEVICE              "PC190HA"
+
+    // Buttons
+    #define BUTTON1_PIN         14
+    #define BUTTON1_CONFIG      BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH
+    #define BUTTON1_RELAY       1
+
+    // Relays
+    #define RELAY1_PIN          12
+    #define RELAY1_TYPE         RELAY_TYPE_NORMAL
+
+    // LEDs
+    #define LED1_PIN            4   // blue LED
+    #define LED1_PIN_INVERSE    1
+    #define LED2_PIN            13  // red LED
+    #define LED2_PIN_INVERSE    1
+
+// -----------------------------------------------------------------------------
+// Arlec Smart PB89HA Power Strip
+// https://templates.blakadder.com/arlec_PB89HA.html
+// -----------------------------------------------------------------------------
+
+#elif defined(ARLEC_PB89HA)
+
+    // Info
+    #define MANUFACTURER        "ARLEC"
+    #define DEVICE              "PB89HA"
+
+    // Buttons
+    #define BUTTON1_PIN         3
+    #define BUTTON1_CONFIG      BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH
+
+    // Relays
+    #define RELAY1_PIN          5
+    #define RELAY2_PIN          4
+    #define RELAY3_PIN          13
+    #define RELAY4_PIN          12
+
+    // LEDs
+    #define LED1_PIN            1
+    #define LED1_PIN_INVERSE    1
+
+// -----------------------------------------------------------------------------
+// Prodino WIFI
+// https://kmpelectronics.eu/products/prodino-wifi-v1/
+// -----------------------------------------------------------------------------
+
+#elif defined(PRODINO_WIFI)
+
+    // Info
+    #define MANUFACTURER        "PRODINO"
+    #define DEVICE              "WIFI"
+
+    // MCP23S08
+    #define MCP23S08_SUPPORT        1
+
+    // Relays
+    #define RELAY_PROVIDER          RELAY_PROVIDER_MCP23S08
+    #define RELAY1_PIN              4
+    #define RELAY2_PIN              5
+    #define RELAY3_PIN              6
+    #define RELAY4_PIN              7
+
+    // Buttons
+    #define BUTTON1_PROVIDER        BUTTON_PROVIDER_MCP23S08
+    #define BUTTON1_CONFIG          BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH
+    #define BUTTON1_PIN             0
+
+    #define BUTTON2_PROVIDER        BUTTON_PROVIDER_MCP23S08
+    #define BUTTON2_CONFIG          BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH
+    #define BUTTON2_PIN             1
+
+    #define BUTTON3_PROVIDER        BUTTON_PROVIDER_MCP23S08
+    #define BUTTON3_CONFIG          BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH
+    #define BUTTON3_PIN             2
+
+    #define BUTTON4_PROVIDER        BUTTON_PROVIDER_MCP23S08
+    #define BUTTON4_CONFIG          BUTTON_PUSHBUTTON | BUTTON_DEFAULT_HIGH
+    #define BUTTON4_PIN             3
+
+    #define BUTTON1_RELAY           1
+    #define BUTTON2_RELAY           2
+    #define BUTTON3_RELAY           3
+    #define BUTTON4_RELAY           4
+
+    // LEDs
+    #define LED1_PIN                2
+    #define LED1_PIN_INVERSE        1
+
+// -----------------------------------------------------------------------------
+// Fcmila E27 7W RGB+W Bulb
+// https://www.aliexpress.com/item/32925895199.html
+// -----------------------------------------------------------------------------
+
+#elif defined(FCMILA_E27_7W_RGBW)
+
+    // Info
+    #define MANUFACTURER        "FCMILA"
+    #define DEVICE              "E27_7W_RGBW"
+    #define RELAY_PROVIDER      RELAY_PROVIDER_LIGHT
+    #define LIGHT_PROVIDER      LIGHT_PROVIDER_DIMMER
+    #define DUMMY_RELAY_COUNT   1
+
+    // Light
+    #define LIGHT_CHANNELS      4
+    #define LIGHT_CH1_PIN       4       // RED
+    #define LIGHT_CH2_PIN       12      // GREEN
+    #define LIGHT_CH3_PIN       14      // BLUE
+    #define LIGHT_CH4_PIN       5       // WHITE
 
 #else
 

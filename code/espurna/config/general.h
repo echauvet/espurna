@@ -79,7 +79,7 @@
 //------------------------------------------------------------------------------
 
 // UDP debug log
-// To receive the message son the destination computer use nc:
+// To receive the message on the destination computer use nc:
 // nc -ul 8113
 
 #ifndef DEBUG_UDP_SUPPORT
@@ -214,20 +214,9 @@
 // EEPROM
 //------------------------------------------------------------------------------
 
-#define EEPROM_SIZE             SPI_FLASH_SEC_SIZE  // EEPROM size in bytes (1 sector = 4096 bytes)
-
 //#define EEPROM_RORATE_SECTORS   2             // Number of sectors to use for EEPROM rotation
                                                 // If not defined the firmware will use a number based
                                                 // on the number of available sectors
-
-#define EEPROM_RELAY_STATUS     0               // Address for the relay status (1 byte)
-#define EEPROM_ENERGY_COUNT     1               // Address for the energy counter (4 bytes)
-#define EEPROM_CUSTOM_RESET     5               // Address for the reset reason (1 byte)
-#define EEPROM_CRASH_COUNTER    6               // Address for the crash counter (1 byte)
-#define EEPROM_MESSAGE_ID       7               // Address for the MQTT message id (4 bytes)
-#define EEPROM_ROTATE_DATA      11              // Reserved for the EEPROM_ROTATE library (3 bytes)
-#define EEPROM_DATA_END         14              // End of custom EEPROM data block
-
 
 #ifndef SAVE_CRASH_ENABLED
 #define SAVE_CRASH_ENABLED          1           // Save stack trace to EEPROM by default
@@ -404,18 +393,42 @@
 
 #ifndef BUTTON_MQTT_SEND_ALL_EVENTS
 #define BUTTON_MQTT_SEND_ALL_EVENTS     0           // 0 - to send only events the are bound to actions
-                                                   // 1 - to send all button events to MQTT
+                                                    // 1 - to send all button events to MQTT
 #endif
 
 #ifndef BUTTON_MQTT_RETAIN
 #define BUTTON_MQTT_RETAIN              0
 #endif
 
-#ifndef BUTTON_EVENTS_SOURCE
-#define BUTTON_EVENTS_SOURCE            BUTTON_EVENTS_SOURCE_GENERIC   // Type of button event source. One of:
-                                                                       // BUTTON_EVENTS_SOURCE_GENERIC - GPIOs (virtual or real)
-                                                                       // BUTTON_EVENTS_SOURCE_SONOFF_DUAL - hardware specific, drive buttons through serial connection
-                                                                       // BUTTON_EVENTS_SOURCE_FOXEL_LIGHTFOX_DUAL - similar to Itead Sonoff Dual, hardware specific
+// Generic digital pin support
+
+#ifndef BUTTON_PROVIDER_GENERIC_SUPPORT
+#define BUTTON_PROVIDER_GENERIC_SUPPORT                1
+#endif
+
+// Hardware specific, drive buttons through serial connection
+// (mutually exclusive)
+
+#ifndef BUTTON_PROVIDER_ITEAD_SONOFF_DUAL_SUPPORT
+#define BUTTON_PROVIDER_ITEAD_SONOFF_DUAL_SUPPORT      0
+#endif
+
+#ifndef BUTTON_PROVIDER_FOXEL_LIGHTFOX_DUAL
+#define BUTTON_PROVIDER_FOXEL_LIGHTFOX_DUAL            0
+#endif
+
+// Support MCP23S08 8-Bit I/O Expander via the SPI interface
+
+#ifndef BUTTON_PROVIDER_MCP23S08_SUPPORT
+#define BUTTON_PROVIDER_MCP23S08_SUPPORT               MCP23S08_SUPPORT
+#endif
+
+// Resistor ladder support. Poll analog pin and return digital LOW when analog reading is in a certain range
+// ref. https://github.com/bxparks/AceButton/tree/develop/docs/resistor_ladder
+// Uses BUTTON#_ANALOG_LEVEL for the individual button level configuration
+
+#ifndef BUTTON_PROVIDER_ANALOG_SUPPORT
+#define BUTTON_PROVIDER_ANALOG_SUPPORT                 0
 #endif
 
 //------------------------------------------------------------------------------
@@ -508,31 +521,48 @@
 // -----------------------------------------------------------------------------
 
 #ifndef WIFI_CONNECT_TIMEOUT
-#define WIFI_CONNECT_TIMEOUT        60000               // Connecting timeout for WIFI in ms
+#define WIFI_CONNECT_TIMEOUT        60000                  // Connecting timeout for WIFI in ms
 #endif
 
 #ifndef WIFI_RECONNECT_INTERVAL
-#define WIFI_RECONNECT_INTERVAL     180000              // If could not connect to WIFI, retry after this time in ms
+#define WIFI_RECONNECT_INTERVAL     180000                 // If could not connect to WIFI, retry after this time in ms
 #endif
 
 #ifndef WIFI_MAX_NETWORKS
-#define WIFI_MAX_NETWORKS           5                   // Max number of WIFI connection configurations
+#define WIFI_MAX_NETWORKS           5                      // Max number of WIFI connection configurations
 #endif
 
 #ifndef WIFI_AP_CAPTIVE
-#define WIFI_AP_CAPTIVE             1                   // Captive portal enabled when in AP mode
+#define WIFI_AP_CAPTIVE             1                      // Captive portal enabled when in AP mode
 #endif
 
-#ifndef WIFI_FALLBACK_APMODE
-#define WIFI_FALLBACK_APMODE        1                   // Fallback to AP mode if no STA connection
+#ifndef WIFI_AP_MODE
+#define WIFI_AP_MODE                WiFiApMode::Fallback   // By default, fallback to AP mode if no STA connection
+                                                           // Use WiFiApMode::Enabled to start it when the device boots
+                                                           // Use WiFiApMode::Disabled to disable AP mode completely
+#endif
+
+#ifndef WIFI_AP_SSID
+#define WIFI_AP_SSID                ""                     // (optional) Specify softAp SSID.
+                                                           // By default or when empty, hostname (or device identifier) is used instead.
+#endif
+
+#ifndef WIFI_AP_PASS
+#define WIFI_AP_PASS                ""                     // (optional) Specify softAp passphrase
+                                                           // By default or when empty, admin password is used instead.
+#endif
+
+#ifndef WIFI_AP_LEASES_SUPPORT
+#define WIFI_AP_LEASES_SUPPORT      0                      // (optional) Specify softAp MAC<->IP DHCP reservations
+                                                           // Use `set wifiApLease# MAC`, where MAC is a valid 12-byte HEX number without colons
 #endif
 
 #ifndef WIFI_SLEEP_MODE
-#define WIFI_SLEEP_MODE             WIFI_NONE_SLEEP     // WIFI_NONE_SLEEP, WIFI_LIGHT_SLEEP or WIFI_MODEM_SLEEP
+#define WIFI_SLEEP_MODE             WIFI_NONE_SLEEP        // WIFI_NONE_SLEEP, WIFI_LIGHT_SLEEP or WIFI_MODEM_SLEEP
 #endif
 
 #ifndef WIFI_SCAN_NETWORKS
-#define WIFI_SCAN_NETWORKS          1                   // Perform a network scan before connecting
+#define WIFI_SCAN_NETWORKS          1                      // Perform a network scan before connecting
 #endif
 
 // Optional hardcoded configuration (up to 5 networks, depending on WIFI_MAX_NETWORKS and espurna/wifi_config.h)
@@ -665,7 +695,7 @@
 #endif
 
 // ref: https://docs.espressif.com/projects/esp-idf/en/latest/api-reference/kconfig.html#config-lwip-esp-gratuitous-arp
-// ref: https://github.com/xoseperez/espurna/pull/1877#issuecomment-525612546 
+// ref: https://github.com/xoseperez/espurna/pull/1877#issuecomment-525612546
 //
 // Broadcast gratuitous ARP periodically to update ARP tables on the AP and all devices on the same network.
 // Helps to solve compatibility issues when ESP fails to timely reply to ARP requests, causing the device's ARP table entry to expire.
@@ -1026,7 +1056,7 @@
 #endif
 
 #ifndef MQTT_SECURE_CLIENT_MFLN
-#define MQTT_SECURE_CLIENT_MFLN     SECURE_CLIENT_MFLN  // Use global MFLN setting by default 
+#define MQTT_SECURE_CLIENT_MFLN     SECURE_CLIENT_MFLN  // Use global MFLN setting by default
 #endif
 
 #ifndef MQTT_SECURE_CLIENT_INCLUDE_CA
@@ -1091,12 +1121,8 @@
 #endif
 
 
-#ifndef MQTT_SKIP_RETAINED
-#define MQTT_SKIP_RETAINED          1               // Skip retained messages on connection
-#endif
-
 #ifndef MQTT_SKIP_TIME
-#define MQTT_SKIP_TIME              1000            // Skip messages for 1 second anter connection
+#define MQTT_SKIP_TIME              0               // Skip messages for N ms after connection. Disabled by default
 #endif
 
 #ifndef MQTT_USE_JSON
@@ -1573,28 +1599,6 @@
 #define NTP_WAIT_FOR_SYNC           1               // Do not report any datetime until NTP sync'ed
 #endif
 
-// WARNING: legacy NTP settings. can be ignored with Core 2.6.2+
-
-#ifndef NTP_TIMEOUT
-#define NTP_TIMEOUT                 1000            // Set NTP request timeout to 2 seconds (issue #452)
-#endif
-
-#ifndef NTP_TIME_OFFSET
-#define NTP_TIME_OFFSET             60              // Default timezone offset (GMT+1)
-#endif
-
-#ifndef NTP_DAY_LIGHT
-#define NTP_DAY_LIGHT               1               // Enable daylight time saving by default
-#endif
-
-#ifndef NTP_SYNC_INTERVAL
-#define NTP_SYNC_INTERVAL           60              // NTP initial check every minute
-#endif
-
-#ifndef NTP_DST_REGION
-#define NTP_DST_REGION              0               // 0 for Europe, 1 for USA (defined in NtpClientLib)
-#endif
-
 // -----------------------------------------------------------------------------
 // ALEXA
 // -----------------------------------------------------------------------------
@@ -1617,40 +1621,26 @@
 
 
 // -----------------------------------------------------------------------------
-// MQTT RF BRIDGE
+// RF BRIDGE
 // -----------------------------------------------------------------------------
 
-#ifndef RF_SUPPORT
-#define RF_SUPPORT                  0
+#ifndef RFB_SUPPORT
+#define RFB_SUPPORT                  0
 #endif
 
-#ifndef RF_DEBOUNCE
-#define RF_DEBOUNCE                 500
+#ifndef RFB_SEND_REPEATS
+#define RFB_SEND_REPEATS             1               // How many times to send the message
 #endif
 
-#ifndef RF_LEARN_TIMEOUT
-#define RF_LEARN_TIMEOUT            60000
-#endif
-
-#ifndef RF_SEND_TIMES
-#define RF_SEND_TIMES               4               // How many times to send the message
-#endif
-
-#ifndef RF_SEND_DELAY
-#define RF_SEND_DELAY               500             // Interval between sendings in ms
-#endif
-
-#ifndef RF_RECEIVE_DELAY
-#define RF_RECEIVE_DELAY            500             // Interval between recieving in ms (avoid debouncing)
-#endif
-
-// Enable RCSwitch support
+// - RFB_PROVIDER_EFM8BB1
+// Default option for the ITEAD_SONOFF_RFBRIDGE or any custom firmware implementing the protocol
+// - RFB_PROVIDER_RCSWITCH
 // Originally implemented for SONOFF BASIC
 // https://tinkerman.cat/adding-rf-to-a-non-rf-itead-sonoff/
 // Also possible to use with SONOFF RF BRIDGE, thanks to @wildwiz
 // https://github.com/xoseperez/espurna/wiki/Hardware-Itead-Sonoff-RF-Bridge---Direct-Hack
-#ifndef RFB_DIRECT
-#define RFB_DIRECT                  0
+#ifndef RFB_PROVIDER
+#define RFB_PROVIDER                RFB_PROVIDER_RCSWITCH
 #endif
 
 #ifndef RFB_RX_PIN
@@ -1661,6 +1651,21 @@
 #define RFB_TX_PIN                  GPIO_NONE
 #endif
 
+#ifndef RFB_LEARN_TIMEOUT
+#define RFB_LEARN_TIMEOUT           15000
+#endif
+
+#ifndef RFB_SEND_DELAY
+#define RFB_SEND_DELAY              500             // Interval between sendings in ms
+#endif
+
+#ifndef RFB_RECEIVE_DELAY
+#define RFB_RECEIVE_DELAY           500             // Interval between recieving in ms (avoid bouncing)
+#endif
+
+#ifndef RFB_TRANSMIT_REPEATS
+#define RFB_TRANSMIT_REPEATS        5               // How many times RCSwitch will repeat the message
+#endif
 
 // -----------------------------------------------------------------------------
 // IR Bridge
@@ -1776,6 +1781,22 @@
 
 #ifndef TUYA_SERIAL
 #define TUYA_SERIAL                 Serial
+#endif
+
+//--------------------------------------------------------------------------------
+// Support expander MCP23S08
+//--------------------------------------------------------------------------------
+
+#ifndef MCP23S08_SUPPORT
+#define MCP23S08_SUPPORT            0
+#endif
+
+//--------------------------------------------------------------------------------
+// Support prometheus metrics export
+//--------------------------------------------------------------------------------
+
+#ifndef PROMETHEUS_SUPPORT
+#define PROMETHEUS_SUPPORT          0
 #endif
 
 // =============================================================================
